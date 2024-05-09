@@ -62,14 +62,14 @@ where
     }
 }
 
-pub struct AsymmetricAuthentication<HashAlgo, SignatureScheme, S>(
-    SignatureScheme,
+pub struct AsymmetricAuthentication<'a, HashAlgo, SignatureScheme, S>(
+    &'a SignatureScheme,
     PhantomData<HashAlgo>,
     PhantomData<S>,
 );
 
-impl<HashAlgo, SignatureScheme, S> AsymmetricAuthentication<HashAlgo, SignatureScheme, S> {
-    pub fn new(scheme: SignatureScheme) -> Self {
+impl<'a, HashAlgo, SignatureScheme, S> AsymmetricAuthentication<'a, HashAlgo, SignatureScheme, S> {
+    pub fn new(scheme: &'a SignatureScheme) -> Self {
         AsymmetricAuthentication(scheme, PhantomData, PhantomData)
     }
 }
@@ -77,7 +77,7 @@ impl<HashAlgo, SignatureScheme, S> AsymmetricAuthentication<HashAlgo, SignatureS
 pub struct AsymmetricAuthenticationBuilder<H>(PhantomData<H>);
 
 impl<H> AsymmetricAuthenticationBuilder<H> {
-    pub fn build<G, S>(scheme: G) -> AsymmetricAuthentication<H, G, S> {
+    pub fn build<G, S>(scheme: &G) -> AsymmetricAuthentication<H, G, S> {
         AsymmetricAuthentication::new(scheme)
     }
 }
@@ -85,7 +85,7 @@ impl<H> AsymmetricAuthenticationBuilder<H> {
 macro_rules! type_level_Asymmetric_algorithm_type {
     ($hash_type: ty, $signature_scheme: ty, $output: ty, $algorithm_type: expr) => {
         impl TypeLevelAlgorithmType
-            for AsymmetricAuthentication<$hash_type, $signature_scheme, $output>
+            for AsymmetricAuthentication<'_, $hash_type, $signature_scheme, $output>
         {
             fn algorithm_type() -> AlgorithmType {
                 $algorithm_type
@@ -163,8 +163,8 @@ type_level_Asymmetric_algorithm_type!(
 
 // TODO: Ps256, Ps384, Ps512
 
-impl<HashAlgo, SignatureScheme, S> SigningAlgorithm
-    for AsymmetricAuthentication<HashAlgo, SignatureScheme, S>
+impl<'a, HashAlgo, SignatureScheme, S> SigningAlgorithm
+    for AsymmetricAuthentication<'a, HashAlgo, SignatureScheme, S>
 where
     Self: TypeLevelAlgorithmType,
     SignatureScheme: DigestSigner<HashAlgo, S>,
@@ -187,8 +187,8 @@ where
     }
 }
 
-impl<HashAlgo, SignatureScheme, S> VerifyingAlgorithm
-    for AsymmetricAuthentication<HashAlgo, SignatureScheme, S>
+impl<'a, HashAlgo, SignatureScheme, S> VerifyingAlgorithm
+    for AsymmetricAuthentication<'a, HashAlgo, SignatureScheme, S>
 where
     Self: TypeLevelAlgorithmType,
     SignatureScheme: DigestVerifier<HashAlgo, S>,
@@ -301,7 +301,7 @@ mod tests {
         let private_key = include_str!("../../test/es256-private.pem");
         let signing_key = SigningKey::from_pkcs8_pem(private_key).unwrap();
 
-        let signer = AsymmetricAuthenticationBuilder::<Sha256>::build(signing_key);
+        let signer = AsymmetricAuthenticationBuilder::<Sha256>::build(&signing_key);
 
         let header = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9";
         let claims = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0";
@@ -320,7 +320,7 @@ mod tests {
         let signing_key = SigningKey::from_pkcs8_pem(private_key).unwrap();
         let verifying_key = *signing_key.verifying_key();
 
-        let verifer = AsymmetricAuthenticationBuilder::<Sha256>::build(verifying_key);
+        let verifer = AsymmetricAuthenticationBuilder::<Sha256>::build(&verifying_key);
 
         let header = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9";
         let claims = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0";
@@ -339,7 +339,7 @@ mod tests {
         let private_key = RsaPrivateKey::from_pkcs1_pem(private_key).unwrap();
         let signing_key = rsa::pkcs1v15::SigningKey::new(private_key);
 
-        let signer = AsymmetricAuthenticationBuilder::<Sha256>::build(signing_key);
+        let signer = AsymmetricAuthenticationBuilder::<Sha256>::build(&signing_key);
 
         let header = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9";
         let claims = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0";
@@ -359,7 +359,7 @@ mod tests {
         let signing_key = rsa::pkcs1v15::SigningKey::new(private_key);
         let verifying_key = signing_key.verifying_key();
 
-        let verifer = AsymmetricAuthenticationBuilder::<Sha256>::build(verifying_key);
+        let verifer = AsymmetricAuthenticationBuilder::<Sha256>::build(&verifying_key);
 
         let header = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9";
         let claims = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0";
