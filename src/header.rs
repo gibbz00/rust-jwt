@@ -62,10 +62,13 @@ impl JoseHeader for Header {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "UPPERCASE")]
 pub enum HeaderType {
     #[serde(rename = "JWT")]
     JsonWebToken,
+    /// JWT Profile for OAuth 2.0 Access Tokens support (RFC 9068)
+    /// https://datatracker.ietf.org/doc/html/rfc9068#name-header
+    #[serde(rename = "at+jwt")]
+    JwtAccessToken,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
