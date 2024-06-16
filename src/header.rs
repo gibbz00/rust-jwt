@@ -67,7 +67,7 @@ pub enum HeaderType {
     JsonWebToken,
     /// JWT Profile for OAuth 2.0 Access Tokens support (RFC 9068)
     /// https://datatracker.ietf.org/doc/html/rfc9068#name-header
-    #[serde(rename = "at+jwt")]
+    #[serde(rename = "at+jwt", alias = "application/at+jwt")]
     JwtAccessToken,
 }
 
